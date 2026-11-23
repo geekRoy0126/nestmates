@@ -59,38 +59,48 @@ export function splitShares(total: Cents, shares: Readonly<Record<string, number
   return apportion(total, entries);
 }
 
-export type SplitRule =
-  | { mode: "even"; among?: string[] }
-  | { mode: "shares"; shares: Record<string, number> }
-  | { mode: "exact"; amounts: Record<string, Cents> };
+/** US5 "exact": the payer types each person's amount; they must be whole cents ≥ 0 and add up to the total. */
+export function splitExact(total: Cents, amounts: Readonly<Record<string, Cents>>): SplitParts {
+  assertPositiveCents(total);
+  const entries = Object.entries(amounts);
+  assertParticipants(entries.map(([id]) => id));
+  if (entries.some(([, v]) => !Number.isInteger(v) || v < 0)) {
+    throw new DomainError("INVALID_AMOUNT", "Each amount must be a whole number of cents, 0 or more.");
+  }
+  const sum = entries.reduce((s, [, v]) => s + v, 0);
+  if (sum !== total) {
+    throw new DomainError("EXACT_MISMATCH", `Amounts add up to ${sum} cents, not ${total}.`);
+  }
+  return Object.fromEntries(entries);
+}
 
+/** How an expense is divided (PRD US5). `even` without `among` means the whole household. */
+export type SplitRule =
+  | { mode: "even"; among?: readonly string[] }
+  | { mode: "shares"; shares: Readonly<Record<string, number>> }
+  | { mode: "exact"; amounts: Readonly<Record<string, Cents>> };
+
+function assertMembers(ids: Iterable<string>, memberIds: readonly string[]): void {
+  const known = new Set(memberIds);
+  for (const id of ids) {
+    if (!known.has(id)) throw new DomainError("UNKNOWN_MEMBER", `${id} is not in the household.`);
+  }
+}
+
+/** Split one expense among household members (US5.4: only members can be participants). */
 export function splitExpense(expense: { total: Cents; split: SplitRule }, memberIds: readonly string[]): SplitParts {
   const { total, split } = expense;
-  const known = new Set(memberIds);
-  const check = (ids: string[]) => {
-    for (const id of ids) {
-      if (!known.has(id)) throw new DomainError("UNKNOWN_MEMBER", `${id} is not in the household.`);
+  switch (split.mode) {
+    case "even": {
+      const among = split.among ?? memberIds;
+      assertMembers(among, memberIds);
+      return splitEven(total, among);
     }
-  };
-  if (split.mode === "even") {
-    const among = split.among ?? [...memberIds];
-    check(among);
-    return splitEven(total, among);
+    case "shares":
+      assertMembers(Object.keys(split.shares), memberIds);
+      return splitShares(total, split.shares);
+    case "exact":
+      assertMembers(Object.keys(split.amounts), memberIds);
+      return splitExact(total, split.amounts);
   }
-  if (split.mode === "shares") {
-    check(Object.keys(split.shares));
-    return splitShares(total, split.shares);
-  }
-  assertPositiveCents(total);
-  const ids = Object.keys(split.amounts);
-  assertParticipants(ids);
-  check(ids);
-  let sum = 0;
-  for (const id of ids) {
-    const v = split.amounts[id];
-    if (!Number.isInteger(v) || v < 0) throw new DomainError("INVALID_AMOUNT", "Amounts must be whole cents ≥ 0.");
-    sum += v;
-  }
-  if (sum !== total) throw new DomainError("EXACT_MISMATCH", `Amounts add up to ${sum}, not ${total}.`);
-  return { ...split.amounts };
 }
