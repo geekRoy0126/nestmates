@@ -2,7 +2,7 @@ import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import { DomainError } from "./errors";
-import { splitEven, splitShares } from "./split";
+import { splitEven, splitExpense, splitShares } from "./split";
 
 const codeOf = (fn: () => unknown) => {
   try {
@@ -83,5 +83,64 @@ describe("splitShares", () => {
 
   it("AC US5.4: rejects an empty share map", () => {
     expect(codeOf(() => splitShares(100, {}))).toBe("NO_PARTICIPANTS");
+  });
+});
+
+describe("splitExpense", () => {
+  const household = ["a", "b", "c"];
+
+  it("AC US5.3: even among everyone when no subset is given", () => {
+    expect(splitExpense({ total: 900, split: { mode: "even" } }, household)).toEqual({ a: 300, b: 300, c: 300 });
+  });
+
+  it("AC US5.3: even among a chosen subset only", () => {
+    expect(splitExpense({ total: 900, split: { mode: "even", among: ["a", "c"] } }, household)).toEqual({
+      a: 450,
+      c: 450,
+    });
+  });
+
+  it("AC US5.3: by shares", () => {
+    expect(splitExpense({ total: 1000, split: { mode: "shares", shares: { a: 2, b: 1, c: 1 } } }, household)).toEqual(
+      { a: 500, b: 250, c: 250 },
+    );
+  });
+
+  it("AC US5.3: exact amounts that add up to the total", () => {
+    expect(splitExpense({ total: 8420, split: { mode: "exact", amounts: { a: 6920, b: 1500 } } }, household)).toEqual(
+      { a: 6920, b: 1500 },
+    );
+  });
+
+  it("AC US5.4: rejects exact amounts that don't add up to the total", () => {
+    expect(
+      codeOf(() => splitExpense({ total: 8420, split: { mode: "exact", amounts: { a: 6920, b: 1000 } } }, household)),
+    ).toBe("EXACT_MISMATCH");
+  });
+
+  it("AC US5.1: rejects exact amounts that are negative or fractional", () => {
+    for (const bad of [-100, 10.5]) {
+      expect(
+        codeOf(() => splitExpense({ total: 100, split: { mode: "exact", amounts: { a: 100 - bad, b: bad } } }, household)),
+      ).toBe("INVALID_AMOUNT");
+    }
+  });
+
+  it("AC US5.4: rejects participants who are not household members", () => {
+    expect(codeOf(() => splitExpense({ total: 100, split: { mode: "even", among: ["a", "zed"] } }, household))).toBe(
+      "UNKNOWN_MEMBER",
+    );
+    expect(codeOf(() => splitExpense({ total: 100, split: { mode: "shares", shares: { zed: 1 } } }, household))).toBe(
+      "UNKNOWN_MEMBER",
+    );
+    expect(codeOf(() => splitExpense({ total: 100, split: { mode: "exact", amounts: { zed: 100 } } }, household))).toBe(
+      "UNKNOWN_MEMBER",
+    );
+  });
+
+  it("AC US5.4: rejects an explicitly empty subset", () => {
+    expect(codeOf(() => splitExpense({ total: 100, split: { mode: "even", among: [] } }, household))).toBe(
+      "NO_PARTICIPANTS",
+    );
   });
 });
