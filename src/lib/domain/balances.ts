@@ -28,7 +28,7 @@ export function computeBalances(memberIds: string[], expenses: Expense[]): Recor
   for (const id of memberIds) result[id] = { balance: 0, lines: [] };
 
   for (const e of expenses) {
-    if (!result[e.paidBy]) throw new DomainError("UNKNOWN_MEMBER", `${e.paidBy} is not in the household.`);
+    if (!memberIds.includes(e.paidBy)) throw new DomainError("UNKNOWN_MEMBER", `${e.paidBy} is not in the household.`);
     const parts = splitExpense(e, memberIds);
     for (const id of memberIds) {
       const paid = id === e.paidBy ? e.total : 0;
