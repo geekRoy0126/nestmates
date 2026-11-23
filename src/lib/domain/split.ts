@@ -25,3 +25,27 @@ export function splitEven(total: Cents, participants: readonly string[]): SplitP
   const leftover = total % participants.length;
   return Object.fromEntries(participants.map((id, i) => [id, base + (i < leftover ? 1 : 0)]));
 }
+
+export function splitShares(total: Cents, shares: Record<string, number>): SplitParts {
+  assertPositiveCents(total);
+  const ids = Object.keys(shares);
+  assertParticipants(ids);
+  for (const id of ids) {
+    if (!Number.isInteger(shares[id]) || shares[id] <= 0) {
+      throw new DomainError("INVALID_SHARES", "Shares must be positive whole numbers.");
+    }
+  }
+  const totalShares = ids.reduce((s, id) => s + shares[id], 0);
+  const parts: SplitParts = {};
+  const remainders: { id: string; rem: number; order: number }[] = [];
+  let assigned = 0;
+  ids.forEach((id, order) => {
+    const exact = (total * shares[id]) / totalShares;
+    parts[id] = Math.floor(exact);
+    assigned += parts[id];
+    remainders.push({ id, rem: exact - Math.floor(exact), order });
+  });
+  remainders.sort((a, b) => b.rem - a.rem || a.order - b.order);
+  for (let i = 0; i < total - assigned; i++) parts[remainders[i].id] += 1;
+  return parts;
+}
