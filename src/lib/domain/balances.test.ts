@@ -64,6 +64,12 @@ describe("computeBalances", () => {
     }
   });
 
+  it("AC US6.1: rejects a payer id that collides with an Object.prototype key", () => {
+    for (const paidBy of ["constructor", "toString", "__proto__"]) {
+      expect(() => computeBalances(members, [{ ...groceries, paidBy }])).toThrow(DomainError);
+    }
+  });
+
   describe("invariants", () => {
     const expensesArb = fc.array(
       fc.record({
