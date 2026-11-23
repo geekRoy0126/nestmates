@@ -14,6 +14,32 @@ function apply(balances: Record<string, number>, transfers: Transfer[]): Record<
   return after;
 }
 
+/**
+ * Test oracle, deliberately a different algorithm from the implementation: enumerate every set partition of the
+ * non-zero balances and keep the one with the most zero-sum blocks. Minimum transfers = n − blocks.
+ */
+function minimumTransfers(values: number[]): number {
+  const xs = values.filter((v) => v !== 0);
+  let best = 0;
+  const blocks: number[] = [];
+  const visit = (i: number) => {
+    if (i === xs.length) {
+      if (blocks.every((s) => s === 0)) best = Math.max(best, blocks.length);
+      return;
+    }
+    for (let b = 0; b < blocks.length; b++) {
+      blocks[b] += xs[i];
+      visit(i + 1);
+      blocks[b] -= xs[i];
+    }
+    blocks.push(xs[i]);
+    visit(i + 1);
+    blocks.pop();
+  };
+  visit(0);
+  return xs.length === 0 ? 0 : xs.length - best;
+}
+
 /** Arbitrary balances for 2–8 members that sum to exactly 0 (what computeBalances guarantees). */
 const balancesArb = fc
   .array(fc.integer({ min: -100_000, max: 100_000 }), { minLength: 1, maxLength: 7 })
@@ -67,6 +93,22 @@ describe("settleUp", () => {
       fc.property(balancesArb, (balances) => {
         const reversed = Object.fromEntries(Object.entries(balances).reverse());
         expect(settleUp(reversed)).toEqual(settleUp(balances));
+      }),
+    );
+  });
+
+  it("AC US7.5: settles sub-groups that balance on their own separately (4 transfers, not 5)", () => {
+    // {a, e, f} and {b, c, d} each sum to 0, so 2 + 2 transfers suffice.
+    const balances = { a: 400, b: 600, c: -300, d: -300, e: -200, f: -200 };
+    const plan = settleUp(balances);
+    expect(plan).toHaveLength(4);
+    expect(Object.values(apply(balances, plan)).every((v) => v === 0)).toBe(true);
+  });
+
+  it("AC US7.5: uses the minimum possible number of transfers", () => {
+    fc.assert(
+      fc.property(balancesArb, (balances) => {
+        expect(settleUp(balances)).toHaveLength(minimumTransfers(Object.values(balances)));
       }),
     );
   });

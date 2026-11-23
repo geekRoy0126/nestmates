@@ -58,6 +58,8 @@ Roles are **per household**: one person can be admin of one household and a room
 - A household with *n* non-zero balances never needs more than *n − 1* transfers.
 - No transfer is zero, negative, or from a person to themselves.
 - The plan is deterministic.
+- (US7.5, added during TDD) The plan uses the **minimum possible** number of transfers. Households have at most 8
+  members, so this is computed exactly: n − (the largest number of groups that each settle among themselves).
 
 ### US8 — Monthly fairness report (admin)
 - Per member: effort points done, money paid, money owed, for a calendar month.
