@@ -11,5 +11,8 @@ export type Chore = {
   weight: number;
 };
 
+/** Money, always an integer number of cents (CLAUDE.md decision 2). */
+export type Cents = number;
+
 /** Cumulative effort points per member id. */
 export type Points = Readonly<Record<string, number>>;
