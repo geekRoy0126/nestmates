@@ -87,3 +87,33 @@ export function assignWeek(input: WeekInput): WeekResult {
 
   return { assignments, points };
 }
+
+export type ScheduleInput = {
+  members: readonly Member[];
+  chores: readonly Chore[];
+  /** `awayByWeek[i]` lists the member ids away in week i; its length is the number of weeks. */
+  awayByWeek: readonly (readonly string[])[];
+  points?: Points;
+};
+
+export type ScheduleResult = {
+  weeks: Assignment[][];
+  /** Points after the last week. */
+  points: Points;
+};
+
+/** Run `assignWeek` week after week, carrying cumulative points forward (US3 "so far"). */
+export function scheduleWeeks({ members, chores, awayByWeek, points }: ScheduleInput): ScheduleResult {
+  const weeks: Assignment[][] = [];
+  let carried: Points = points ?? {};
+  for (const away of awayByWeek) {
+    const week = assignWeek({ members, chores, away, points: carried });
+    weeks.push(week.assignments);
+    carried = week.points;
+  }
+  if (awayByWeek.length === 0) {
+    // Still validate and normalise points so callers get one entry per member.
+    carried = assignWeek({ members, chores: [], points: carried }).points;
+  }
+  return { weeks, points: carried };
+}
