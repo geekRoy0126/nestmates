@@ -5,7 +5,8 @@ export type DomainErrorCode =
   | "NO_MEMBERS"
   | "INVALID_AMOUNT"
   | "NO_PARTICIPANTS"
-  | "INVALID_SHARES";
+  | "INVALID_SHARES"
+  | "EXACT_MISMATCH";
 
 /** Thrown by domain functions for invalid input; the UI maps `code` to a message (CLAUDE.md decision 4). */
 export class DomainError extends Error {
