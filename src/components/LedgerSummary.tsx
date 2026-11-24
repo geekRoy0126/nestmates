@@ -10,6 +10,13 @@ export function formatCents(cents: Cents): string {
   return cents < 0 ? `−${text}` : text;
 }
 
+/** "is owed $60.00" / "owes $60.00" / "is settled" — sign convention from `Balance`. */
+function describeBalance(balance: Cents): string {
+  if (balance > 0) return `is owed ${formatCents(balance)}`;
+  if (balance < 0) return `owes ${formatCents(-balance)}`;
+  return "is settled";
+}
+
 type Props = {
   members: Member[];
   expenses: Expense[];
@@ -30,12 +37,10 @@ export function LedgerSummary({ members, expenses }: Props) {
         <ul className="flex flex-col gap-3 text-sm">
           {members.map((m) => {
             const { balance, lines } = balances[m.id];
-            const status =
-              balance > 0 ? `is owed ${formatCents(balance)}` : balance < 0 ? `owes ${formatCents(-balance)}` : "is settled";
             return (
               <li key={m.id}>
                 <p>
-                  <span className="font-medium">{m.name}</span> {status}
+                  <span className="font-medium">{m.name}</span> {describeBalance(balance)}
                 </p>
                 <ul className="ml-4 list-disc text-zinc-600 dark:text-zinc-400">
                   {lines.map((l) => (
