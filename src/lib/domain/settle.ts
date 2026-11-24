@@ -1,6 +1,9 @@
 import { DomainError } from "./errors";
 import type { Cents } from "./types";
 
+/** PRD US1: 2–8 members. Also what keeps the O(3^n) partition search and 32-bit masks safe. */
+export const MAX_HOUSEHOLD_SIZE = 8;
+
 /** `from` pays `to` `amount` cents. */
 export type Transfer = { from: string; to: string; amount: Cents };
 
@@ -71,6 +74,9 @@ function largestZeroSumPartition(values: readonly number[]): number[] {
 export function settleUp(balances: Readonly<Record<string, Cents>>): Transfer[] {
   const sum = Object.values(balances).reduce((s, v) => s + v, 0);
   if (sum !== 0) throw new DomainError("UNBALANCED", `Balances sum to ${sum}, not 0.`);
+  if (Object.keys(balances).length > MAX_HOUSEHOLD_SIZE) {
+    throw new DomainError("TOO_MANY_MEMBERS", `A household has at most ${MAX_HOUSEHOLD_SIZE} members.`);
+  }
 
   const ids = Object.keys(balances)
     .sort()
