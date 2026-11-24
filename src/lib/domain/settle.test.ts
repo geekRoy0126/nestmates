@@ -113,6 +113,21 @@ describe("settleUp", () => {
     );
   });
 
+  it("AC US1.3: rejects more than 8 members (households have 2–8)", () => {
+    const nine = Object.fromEntries(Array.from({ length: 9 }, (_, i) => [`m${i}`, i < 8 ? 1 : -8]));
+    try {
+      settleUp(nine);
+      expect.unreachable();
+    } catch (e) {
+      expect((e as DomainError).code).toBe("TOO_MANY_MEMBERS");
+    }
+  });
+
+  it("AC US1.3: 8 members is fine", () => {
+    const eight = Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`m${i}`, i < 7 ? 1 : -7]));
+    expect(settleUp(eight)).toHaveLength(7);
+  });
+
   it("rejects balances that don't sum to 0", () => {
     try {
       settleUp({ a: 100, b: -50 });
