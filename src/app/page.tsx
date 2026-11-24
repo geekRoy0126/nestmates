@@ -14,6 +14,11 @@ export default function Home() {
               Chore rotation
             </Link>
           </li>
+          <li>
+            <Link href="/ledger" className="font-medium underline underline-offset-4">
+              Bills and settle up
+            </Link>
+          </li>
         </ul>
       </nav>
     </main>
