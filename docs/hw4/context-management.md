@@ -28,11 +28,11 @@ the first thing `/compact` summarises away.
 
 | Situation | Command | In this project |
 | --- | --- | --- |
-| Closed the terminal / machine restarted mid-task | `claude --continue` (latest session) or `claude --resume` (pick one) | **Used.** The session was interrupted twice ("No response requested" → "继续"), once across a Windows update reboot (OS build 26200 → 26300). The same session resumed with the plan and progress intact, and the first command after the reboot surfaced the zeroed git ref, which was then recovered (session log, 15:48). |
-| Finished a feature, starting an unrelated one | `/clear` | **Strategy.** The boundary between Part 2 (US3 chores) and Part 3 (US5–7 money) is where to clear: nothing from chore rotation is needed for splits, and CLAUDE.md + PRD reload automatically. In this recorded session the context still had room, so the work ran straight through; see the screenshots in the submission folder for `/clear` on this repo. |
-| Same feature, context filling with test output | `/compact <focus>` | **Strategy.** e.g. `/compact keep the current AC, the failing test name and its error, and the next AC; drop old test output`. Safe mid-TDD because every finished step is already a commit. |
+| Closed the terminal / machine restarted mid-task | `claude --continue` (latest session) or `claude --resume` (pick one) | **Used**, and recorded in [context-demo/03](context-demo/03-continue-compact-clear.txt). The session was interrupted twice ("No response requested" → "继续"), once across a Windows update reboot (OS build 26200 → 26300). The same session resumed with the plan and progress intact, and the first command after the reboot surfaced the zeroed git ref, which was then recovered (session log, 15:48). |
+| Finished a feature, starting an unrelated one | `/clear` | **Demonstrated** in [context-demo/03](context-demo/03-continue-compact-clear.txt): after `/clear` the conversation's checkpoint is gone but CLAUDE.md's money rule is still known. The boundary between Part 2 (US3 chores) and Part 3 (US5–7 money) is where to clear. In the main build session the context still had room, so the work ran straight through. |
+| Same feature, context filling with test output | `/compact <focus>` | **Demonstrated** in [context-demo/03](context-demo/03-continue-compact-clear.txt): `/compact keep only the TDD checkpoint (cycle, AC id, failing test name)` and the checkpoint survives the summary. In real TDD: `/compact keep the current AC, the failing test name and its error, and the next AC; drop old test output`. Safe mid-TDD because every finished step is already a commit. |
 | Quick side question that shouldn't pollute the task | `/btw` | e.g. asking about a Vitest flag without adding it to the TDD thread |
-| Check what is using context | `/context` | Before deciding between `/compact` and `/clear` |
+| Check what is using context | `/context` | **Demonstrated** in [context-demo/01](context-demo/01-context.txt): it lists CLAUDE.md, PRD.md and AGENTS.md as loaded memory files. Used before deciding between `/compact` and `/clear` |
 
 ## 4. Habits that kept context small
 

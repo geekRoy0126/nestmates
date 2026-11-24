@@ -70,6 +70,11 @@ behaviour; the written rules check intent. I need both.
    The *ask* list (`npm install`, `git push`) is why Claude stopped at `npm audit` instead of upgrading Next
    when a build message told it to.
 
+I recorded all four commands on this repo (`docs/hw4/context-demo/`). `/context` lists CLAUDE.md, PRD.md and
+AGENTS.md as loaded memory. After `/compact` with a focus, the TDD checkpoint survives. After `/clear` the
+checkpoint is gone, but the CLAUDE.md money rule is still known. That is exactly why durable rules belong in
+CLAUDE.md and task state belongs in the conversation and in git.
+
 What I would change: the session got long, and the boundary between Part 2 and Part 3 was the natural `/clear`
 point. Next time I'll clear there and `/compact` with an explicit focus ("keep current AC, failing test, next AC")
 inside long TDD runs.

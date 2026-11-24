@@ -1,0 +1,82 @@
+## 3. --continue: resume the most recent session in this directory
+$ claude -p Remember this checkpoint: we are on TDD cycle 6, AC US7.5, failing test 'uses the minimum possible number of transfers'. Reply only: noted. --model haiku
+noted.
+
+$ claude --continue -p Without tools: which TDD cycle, AC and failing test did I give you in my previous message? --model haiku
+TDD cycle 6, AC US7.5, failing test 'uses the minimum possible number of transfers'.
+
+## 4. /compact with a focus, then the checkpoint survives in the summary
+$ claude --continue -p /compact keep only the TDD checkpoint (cycle, AC id, failing test name) --model haiku
+
+
+$ claude --continue -p /context --model haiku
+## Context Usage
+
+**Model:** claude-haiku-5-5  
+**Tokens:** 26k / 1m (3%)
+
+### Estimated usage by category
+
+| Category | Tokens | Percentage |
+|----------|--------|------------|
+| System prompt | 3.4k | 0.3% |
+| System tools | 5.1k | 0.5% |
+| System tools (deferred) | 14.3k | 1.4% |
+| Memory files | 4.2k | 0.4% |
+| Skills | 5.2k | 0.5% |
+| Messages | 8.2k | 0.8% |
+| Free space | 941k | 94.1% |
+| Autocompact buffer | 33k | 3.3% |
+
+### Memory Files
+
+| Type | Path | Tokens |
+|------|------|--------|
+| Project | D:\CS6983\nestmates\CLAUDE.md | 2.6k |
+| Project | D:\CS6983\nestmates\docs\PRD.md | 1.4k |
+| Project | D:\CS6983\nestmates\AGENTS.md | 206 |
+
+### Skills
+
+| Skill | Source | Tokens |
+|-------|--------|--------|
+| dataviz | Built-in | ~480 |
+| update-config | Built-in | ~240 |
+| keybindings-help | Built-in | ~80 |
+| code-review | Built-in | ~410 |
+| simplify | Built-in | ~60 |
+| fewer-permission-prompts | Built-in | ~60 |
+| claude-approvals | Built-in | ~150 |
+| loop | Built-in | ~120 |
+| schedule | Built-in | ~130 |
+| claude-api | Built-in | ~390 |
+| run | Built-in | ~120 |
+| plugin-authoring | Built-in | ~90 |
+| init | Built-in | ~20 |
+| security-review | Built-in | ~30 |
+| built-in-browser | claude.ai sync | ~290 |
+| chrome-browser | claude.ai sync | ~260 |
+| computer-use | claude.ai sync | ~320 |
+| deep-research | claude.ai sync | ~200 |
+| docs | claude.ai sync | ~340 |
+| docx | claude.ai sync | ~320 |
+| import-memory | claude.ai sync | ~60 |
+| morning | claude.ai sync | ~120 |
+| pdf | claude.ai sync | ~150 |
+| pptx | claude.ai sync | ~330 |
+| skill-creator | claude.ai sync | ~120 |
+| xlsx | claude.ai sync | ~320 |
+
+
+$ claude --continue -p Without tools: after the compaction, what TDD checkpoint do you still know about? --model haiku
+Cycle 6, AC US7.5, failing test: 'uses the minimum possible number of transfers'.
+
+## 5. /clear: conversation is dropped, CLAUDE.md is reloaded
+$ claude --continue -p /clear --model haiku
+
+
+$ claude --continue -p Without tools: (a) do you know any TDD checkpoint from earlier in this conversation? (b) what does this repo's CLAUDE.md say about money? One line each. --model haiku
+(a) No. The `/clear` wiped the earlier conversation, so I have no TDD checkpoint from it. The recent git log shows TDD-tagged commits like `5e3fe8e feat(green): LedgerSummary renders balances…`, but that is repo history, not something from this session.
+
+(b) Money is integer cents (`type Cents = number`, always an integer), never floats, and no `toFixed` before the UI layer.
+

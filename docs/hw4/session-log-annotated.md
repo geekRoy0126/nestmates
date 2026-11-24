@@ -138,3 +138,8 @@ branches; `npm run build` produces 4 static routes.
 | 16:02 | Found this session's transcript (`~/.claude/projects/…/27227b34-….jsonl`, 1 145 records) |
 | 16:03 | Wrote `extract-session-log.py`; checked the output for emails, account ids and home paths before committing |
 | 16:04+ | Context-management notes, this annotated log, reflection |
+| 16:12 | Approved by me: `npm i next@16.4.6 eslint-config-next@16.4.6` → `npm audit` 0 vulnerabilities, 78/78, build clean (`df5fc56`); branch renamed `master` → `main` |
+| 16:14 | Context demo with the real CLI (`claude -p` / `--continue`, Haiku): `/context`, a no-tools question answered from CLAUDE.md, `--continue`, `/compact <focus>`, `/clear`, outputs in `docs/hw4/context-demo/`. The first `/context` run failed because Git Bash rewrote `/context` into `C:/Program Files/Git/context`; rerun with `MSYS_NO_PATHCONV=1`. |
+
+▶ **Annotation.** The demo shows the division of labour from `context-management.md` actually holding:
+`/clear` drops the task state, while CLAUDE.md and its imports come back on their own.

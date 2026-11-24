@@ -1,0 +1,6 @@
+## 2. Fresh session, no file reads allowed: rules come from auto-loaded CLAUDE.md
+$ claude -p Do not use any tools or read any files. From the instructions you were given at startup only: (1) how must money be represented in this repo, (2) what is the TDD commit naming, (3) which docs are imported into your context? Answer in 5 lines max. --model haiku
+1. Money is integer cents (`type Cents = number`, always an integer). Never use floats or `toFixed` before the UI layer, and distribute rounding leftovers one cent at a time in a deterministic order.
+2. TDD commits are tagged in the subject: `test(red): …`, `feat(green): …`, and `refactor: …`.
+3. CLAUDE.md imports `@docs/PRD.md` (the product requirements) and `@AGENTS.md` (the Next.js version notes).
+
