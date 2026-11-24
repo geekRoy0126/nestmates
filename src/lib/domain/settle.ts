@@ -1,9 +1,11 @@
 import { DomainError } from "./errors";
 import type { Cents } from "./types";
 
+/** `from` pays `to` `amount` cents. */
 export type Transfer = { from: string; to: string; amount: Cents };
 
-function settleGroup(ids: string[], balances: Record<string, Cents>): Transfer[] {
+/** Two-pointer settle of one zero-sum group: every transfer clears someone, so k people need ≤ k − 1 transfers. */
+function settleGroup(ids: readonly string[], balances: Readonly<Record<string, Cents>>): Transfer[] {
   const creditors = ids.filter((id) => balances[id] > 0).map((id) => ({ id, left: balances[id] }));
   const debtors = ids.filter((id) => balances[id] < 0).map((id) => ({ id, left: -balances[id] }));
 
@@ -21,42 +23,63 @@ function settleGroup(ids: string[], balances: Record<string, Cents>): Transfer[]
   return transfers;
 }
 
-export function settleUp(balances: Record<string, Cents>): Transfer[] {
+/** sums[mask] = total of the values whose bits are set in mask. */
+function subsetSums(values: readonly number[]): number[] {
+  const sums = new Array<number>(1 << values.length).fill(0);
+  for (let mask = 1; mask < sums.length; mask++) {
+    const low = mask & -mask;
+    sums[mask] = sums[mask ^ low] + values[31 - Math.clz32(low)];
+  }
+  return sums;
+}
+
+/**
+ * Split all indices into the largest number of groups that each sum to 0 (as bitmasks).
+ * DP over zero-sum masks; each step peels off a zero-sum sub-group containing the mask's lowest bit, so every
+ * partition is considered once. O(3^n), fine for n ≤ 8 (PRD US1).
+ */
+function largestZeroSumPartition(values: readonly number[]): number[] {
+  const sums = subsetSums(values);
+  const full = sums.length - 1;
+  const best = new Array<number>(sums.length).fill(-1); // -1: not a zero-sum mask
+  const first = new Array<number>(sums.length).fill(0);
+  best[0] = 0;
+
+  for (let mask = 1; mask <= full; mask++) {
+    if (sums[mask] !== 0) continue;
+    const low = mask & -mask;
+    for (let sub = mask; sub > 0; sub = (sub - 1) & mask) {
+      const rest = mask ^ sub;
+      if (!(sub & low) || sums[sub] !== 0 || best[rest] < 0) continue;
+      if (best[rest] + 1 > best[mask]) {
+        best[mask] = best[rest] + 1;
+        first[mask] = sub;
+      }
+    }
+  }
+
+  const groups: number[] = [];
+  for (let mask = full; mask > 0; mask ^= first[mask]) groups.push(first[mask]);
+  return groups;
+}
+
+/**
+ * US7: the fewest transfers that bring every balance to 0.
+ * Minimum = (non-zero balances) − (most groups that settle among themselves); each group is then settled with
+ * ≤ size − 1 transfers. Ids are sorted first, so the plan does not depend on key order.
+ */
+export function settleUp(balances: Readonly<Record<string, Cents>>): Transfer[] {
   const sum = Object.values(balances).reduce((s, v) => s + v, 0);
   if (sum !== 0) throw new DomainError("UNBALANCED", `Balances sum to ${sum}, not 0.`);
 
   const ids = Object.keys(balances)
     .sort()
     .filter((id) => balances[id] !== 0);
-  const n = ids.length;
-  const full = (1 << n) - 1;
 
-  const sums = new Array<number>(1 << n).fill(0);
-  for (let mask = 1; mask <= full; mask++) {
-    const low = mask & -mask;
-    sums[mask] = sums[mask ^ low] + balances[ids[31 - Math.clz32(low)]];
-  }
-
-  // best[mask] = most zero-sum groups that mask (itself zero-sum) splits into; pick[mask] = first group.
-  const best = new Array<number>(1 << n).fill(-1);
-  const pick = new Array<number>(1 << n).fill(0);
-  best[0] = 0;
-  for (let mask = 1; mask <= full; mask++) {
-    if (sums[mask] !== 0) continue;
-    const low = mask & -mask;
-    for (let sub = mask; sub > 0; sub = (sub - 1) & mask) {
-      if (!(sub & low) || sums[sub] !== 0 || best[mask ^ sub] < 0) continue;
-      if (best[mask ^ sub] + 1 > best[mask]) {
-        best[mask] = best[mask ^ sub] + 1;
-        pick[mask] = sub;
-      }
-    }
-  }
-
-  const transfers: Transfer[] = [];
-  for (let mask = full; mask > 0; mask ^= pick[mask]) {
-    const group = ids.filter((_, i) => pick[mask] & (1 << i));
-    transfers.push(...settleGroup(group, balances));
-  }
-  return transfers;
+  return largestZeroSumPartition(ids.map((id) => balances[id])).flatMap((mask) =>
+    settleGroup(
+      ids.filter((_, i) => mask & (1 << i)),
+      balances,
+    ),
+  );
 }
